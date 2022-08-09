@@ -13,16 +13,20 @@
 # limitations under the License.
 # ==============================================================================
 
+from os import environ as local_env
 from horovod.runner.common.util import env as env_util
 
 SSH_COMMAND_PREFIX = 'ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no'
 
 
 def get_ssh_command(local_command, host, port=None, identity_file=None, timeout_s=None):
+    ld_library_path = local_env['LD_LIBRARY_PATH']
+
     port_arg = f'-p {port}' if port is not None else ''
     identity_file_arg = f'-i {identity_file}' if identity_file is not None else ''
     timeout_arg = f'-o ConnectTimeout={timeout_s}' if timeout_s is not None else ''
-    return f'{SSH_COMMAND_PREFIX} {host} {port_arg} {identity_file_arg} {timeout_arg} {local_command}'
+    env = f'LD_LIBRARY_PATH="{ld_library_path}:$LD_LIBRARY_PATH"' if ld_library_path is not None else ''
+    return f'{SSH_COMMAND_PREFIX} {host} {port_arg} {identity_file_arg} {timeout_arg} {env} {local_command}'
 
 
 def get_remote_command(local_command, host, port=None, identity_file=None, timeout_s=None):
